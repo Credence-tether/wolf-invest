@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { Briefcase, Users, TrendingUp, Globe } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -103,7 +104,9 @@ export default function CareersPage() {
                         {position.department} • {position.location} • {position.type}
                       </CardDescription>
                     </div>
-                    <Button>Apply Now</Button>
+                    <Link href="/register">
+                      <Button>Apply Now</Button>
+                    </Link>
                   </div>
                 </CardHeader>
               </Card>
@@ -113,7 +116,9 @@ export default function CareersPage() {
             <p className="text-gray-600 dark:text-gray-400 mb-4">
               Don't see a position that fits? We're always looking for talented individuals.
             </p>
-            <Button variant="outline">Send Us Your Resume</Button>
+            <Link href="/register">
+              <Button variant="outline">Send Us Your Resume</Button>
+            </Link>
           </div>
         </div>
       </section>

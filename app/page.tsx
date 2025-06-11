@@ -47,9 +47,23 @@ export default function Home() {
                   WOLV-INVEST
                 </span>
               </h1>
+
+              {/* Add the WOLV-INVEST image */}
+              <div className="relative w-full max-w-md mx-auto my-8">
+                <img
+                  src="/images/wolv-invest.jpg"
+                  alt="WOLV-INVEST Platform Interface"
+                  className="rounded-xl shadow-2xl border border-blue-400/30"
+                />
+                <div className="absolute -bottom-3 -right-3 bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-1 rounded-full text-white text-xs font-medium">
+                  Next-gen crypto investing
+                </div>
+              </div>
+
               <p className="mx-auto max-w-[700px] text-blue-200 md:text-xl">
-                Earn 2-5% daily ROI with our innovative crypto investment platform. Start your journey to financial
-                freedom today with blockchain-powered investments.
+                Your gateway to blockchain-powered investments with industry-leading security, transparency, and
+                returns. Our platform combines cutting-edge technology with expert market analysis to maximize your
+                crypto investment potential.
               </p>
             </div>
             <div className="space-x-4">
