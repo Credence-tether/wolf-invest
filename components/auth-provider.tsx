@@ -1,8 +1,7 @@
 "use client"
 
-import type React from "react"
-import { createContext, useContext, useState, useEffect } from "react"
-import { supabase } from "@/lib/supabaseClient"
+import React, { createContext, useContext, useEffect, useState } from "react"
+import { supabase, createProfile, getProfile, updateLastLogin } from "@/lib/supabase"
 
 export type UserRole = "user" | "admin"
 
@@ -34,85 +33,87 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
-    const getUserDetails = async () => {
+    const fetchUser = async () => {
       const {
         data: { user },
       } = await supabase.auth.getUser()
 
       if (user) {
-        const role = user.user_metadata?.role || "user"
-        const name = user.user_metadata?.name || ""
-
-        setUser({
-          id: user.id,
-          name,
-          email: user.email || "",
-          role,
-          isActive: true,
-          avatar: "",
-          createdAt: user.created_at,
-        })
+        const profile = await getProfile(user.id)
+        if (profile) {
+          setUser({
+            id: user.id,
+            name: profile.full_name,
+            email: profile.email,
+            role: profile.role,
+            isActive: profile.is_active,
+            avatar: profile.avatar_url,
+            createdAt: profile.created_at,
+            lastLogin: profile.last_login,
+          })
+        }
       }
     }
 
-    getUserDetails()
+    fetchUser()
   }, [])
 
-  const register = async (userData: { name: string; email: string; password: string }) => {
+  const register = async ({ name, email, password }: { name: string; email: string; password: string }) => {
     setIsLoading(true)
     try {
       const { data, error } = await supabase.auth.signUp({
-        email: userData.email,
-        password: userData.password,
-        options: {
-          data: {
-            name: userData.name,
-            role: "user",
-          },
-        },
+        email,
+        password,
       })
 
-      if (error) {
-        return { success: false, error: error.message }
+      if (error || !data.user) {
+        setIsLoading(false)
+        return { success: false, error: error?.message || "Registration failed" }
       }
 
+      await createProfile(data.user.id, email, name)
       setIsLoading(false)
       return { success: true }
-    } catch (err) {
+    } catch (error) {
       setIsLoading(false)
-      return { success: false, error: "Registration failed" }
+      return { success: false, error: "Registration error" }
     }
   }
 
   const login = async (email: string, password: string) => {
     setIsLoading(true)
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
 
-      if (error || !data.session) {
+      if (error || !data.user) {
         setIsLoading(false)
-        return { success: false, error: error?.message || "Invalid login" }
+        return { success: false, error: error?.message || "Login failed" }
       }
 
-      const user = data.user
+      const profile = await getProfile(data.user.id)
+      if (!profile) {
+        setIsLoading(false)
+        return { success: false, error: "User profile not found" }
+      }
+
+      await updateLastLogin(data.user.id)
+
       setUser({
-        id: user.id,
-        name: user.user_metadata.name || "",
-        email: user.email || "",
-        role: user.user_metadata.role || "user",
-        avatar: "",
-        isActive: true,
-        createdAt: user.created_at,
+        id: data.user.id,
+        name: profile.full_name,
+        email: profile.email,
+        role: profile.role,
+        isActive: profile.is_active,
+        avatar: profile.avatar_url,
+        createdAt: profile.created_at,
+        lastLogin: profile.last_login,
       })
 
       setIsLoading(false)
       return { success: true }
     } catch (err) {
       setIsLoading(false)
-      return { success: false, error: "Login failed" }
+      return { success: false, error: "Login error" }
     }
   }
 
@@ -143,8 +144,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext)
-  if (context === undefined) {
+  if (!context) {
     throw new Error("useAuth must be used within an AuthProvider")
   }
   return context
-}
+    }
