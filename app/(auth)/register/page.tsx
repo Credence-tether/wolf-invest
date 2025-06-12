@@ -30,6 +30,7 @@ export default function RegisterPage() {
   const [mounted, setMounted] = useState(false)
   const { register, isLoading } = useAuth()
   const router = useRouter()
+  const [confirmationMessage, setConfirmationMessage] = useState("")
 
   useEffect(() => {
     setMounted(true)
@@ -77,9 +78,12 @@ export default function RegisterPage() {
 
     if (result.success) {
       setSuccess(true)
+      if (result.error) {
+        setConfirmationMessage(result.error)
+      }
       setTimeout(() => {
-        router.push("/login?registered=true")
-      }, 2000)
+        router.push("/login")
+      }, 5000)
     } else {
       setError(result.error || "Registration failed")
     }
@@ -99,9 +103,10 @@ export default function RegisterPage() {
           <CardContent className="pt-6">
             <div className="text-center space-y-4">
               <CheckCircle className="h-16 w-16 text-green-400 mx-auto" />
-              <h2 className="text-2xl font-bold text-white">Account Created!</h2>
+              <h2 className="text-2xl font-bold text-white">Registration Successful!</h2>
               <p className="text-green-200">
-                Your account has been successfully created. You can now sign in to start investing.
+                {confirmationMessage ||
+                  "Your account has been created successfully. Please check your email for a confirmation link."}
               </p>
               <Button onClick={() => router.push("/login")} className="bg-green-600 hover:bg-green-700">
                 Continue to Login

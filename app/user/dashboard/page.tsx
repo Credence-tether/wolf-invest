@@ -1,274 +1,350 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState, useEffect } from "react"
+import { useAuth } from "@/components/auth-provider"
 import { useRouter } from "next/navigation"
+import { LoadingSpinner } from "@/components/loading-spinner"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
-import { ArrowUpRight, ArrowDownRight, DollarSign, TrendingUp, Wallet, PieChart, BarChart3 } from "lucide-react"
-import { useAuth } from "@/components/auth-provider"
+import { Progress } from "@/components/ui/progress"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
-  BlockchainNode,
-  BlockchainCube,
-  BlockchainHexagon,
-  BlockchainNetwork,
-  BlockchainWaves,
-  BlockchainCircuit,
-} from "@/components/blockchain-illustrations"
+  DollarSign,
+  TrendingUp,
+  Clock,
+  Target,
+  ArrowUpRight,
+  ArrowDownRight,
+  Wallet,
+  PieChart,
+  BarChart3,
+} from "lucide-react"
+import { generateMockInvestments, calculateInvestmentStats, INVESTMENT_PLANS } from "@/lib/investment-data"
+import type { Investment } from "@/lib/investment-data"
 
-// Client-side component that handles auth logic
 function UserDashboardContent() {
-  const { user, isAuthenticated } = useAuth()
+  const { user, logout } = useAuth()
   const router = useRouter()
-  const [isLoading, setIsLoading] = useState(true)
+  const [investments, setInvestments] = useState<Investment[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Only run auth check on client side
-    if (typeof window !== "undefined") {
-      setIsLoading(false)
-
-      if (!isAuthenticated || !user || user.role !== "user") {
-        router.push("/login")
-        return
-      }
+    if (user) {
+      // Load user investments (mock data for now)
+      const userInvestments = generateMockInvestments(user.id)
+      setInvestments(userInvestments)
+      setLoading(false)
     }
-  }, [user, isAuthenticated, router])
+  }, [user])
 
-  // Show loading state during hydration
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">Loading dashboard...</p>
+  if (loading) {
+    return <LoadingSpinner message="Loading your dashboard..." />
+  }
+
+  const stats = calculateInvestmentStats(investments)
+
+  const StatCard = ({
+    title,
+    value,
+    icon: Icon,
+    trend,
+    trendValue,
+    color = "text-blue-600",
+  }: {
+    title: string
+    value: string
+    icon: any
+    trend?: "up" | "down"
+    trendValue?: string
+    color?: string
+  }) => (
+    <Card>
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium text-muted-foreground">{title}</p>
+            <p className="text-2xl font-bold">{value}</p>
+            {trend && trendValue && (
+              <div className={`flex items-center mt-1 text-sm ${trend === "up" ? "text-green-600" : "text-red-600"}`}>
+                {trend === "up" ? <ArrowUpRight className="h-4 w-4" /> : <ArrowDownRight className="h-4 w-4" />}
+                <span className="ml-1">{trendValue}</span>
+              </div>
+            )}
+          </div>
+          <Icon className={`h-8 w-8 ${color}`} />
         </div>
-      </div>
+      </CardContent>
+    </Card>
+  )
+
+  const InvestmentCard = ({ investment }: { investment: Investment }) => {
+    const plan = INVESTMENT_PLANS.find((p) => p.type === investment.planType)
+    const progress = investment.status === "completed" ? 100 : ((7 - investment.daysRemaining) / 7) * 100
+
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="font-semibold">{plan?.name}</h3>
+              <p className="text-sm text-muted-foreground">
+                Started {new Date(investment.startDate).toLocaleDateString()}
+              </p>
+            </div>
+            <Badge variant={investment.status === "active" ? "default" : "secondary"}>{investment.status}</Badge>
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex justify-between text-sm">
+              <span>Investment Amount</span>
+              <span className="font-medium">${investment.amount.toLocaleString()}</span>
+            </div>
+
+            <div className="flex justify-between text-sm">
+              <span>Total Earnings</span>
+              <span className="font-medium text-green-600">+${investment.totalEarnings.toLocaleString()}</span>
+            </div>
+
+            <div className="flex justify-between text-sm">
+              <span>Daily ROI</span>
+              <span className="font-medium">{investment.dailyROI}%</span>
+            </div>
+
+            {investment.status === "active" && (
+              <>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Progress</span>
+                    <span>{Math.round(progress)}%</span>
+                  </div>
+                  <Progress value={progress} className="h-2" />
+                </div>
+
+                <div className="flex justify-between text-sm">
+                  <span>Days Remaining</span>
+                  <span className="font-medium">{investment.daysRemaining} days</span>
+                </div>
+
+                <div className="flex justify-between text-sm">
+                  <span>Next Payout</span>
+                  <span className="font-medium">{new Date(investment.nextPayoutDate).toLocaleDateString()}</span>
+                </div>
+              </>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     )
   }
 
-  // Redirect if not authenticated (client-side only)
-  if (!isAuthenticated || !user || user.role !== "user") {
-    return null
-  }
-
-  // Mock data for user dashboard
-  const investments = [
-    {
-      id: 1,
-      plan: "Basic Plan",
-      amount: 500,
-      dailyROI: 2.5,
-      daysRemaining: 5,
-      totalEarned: 62.5,
-      status: "active",
-    },
-    {
-      id: 2,
-      plan: "Amateur Plan",
-      amount: 1500,
-      dailyROI: 3.5,
-      daysRemaining: 3,
-      totalEarned: 210,
-      status: "active",
-    },
-  ]
-
-  const totalInvested = investments.reduce((sum, inv) => sum + inv.amount, 0)
-  const totalEarned = investments.reduce((sum, inv) => sum + inv.totalEarned, 0)
-  const dailyEarnings = investments.reduce((sum, inv) => sum + (inv.amount * inv.dailyROI) / 100, 0)
-
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 relative">
-      {/* Added blockchain illustrations */}
-      <BlockchainNode className="absolute top-10 left-[5%] text-blue-600 dark:text-blue-400 opacity-10 hidden lg:block" />
-      <BlockchainCube className="absolute bottom-10 right-[5%] text-blue-600 dark:text-blue-400 opacity-10 hidden lg:block" />
-      <BlockchainHexagon className="absolute top-1/2 left-[2%] text-blue-600 dark:text-blue-400 opacity-10 hidden xl:block" />
-      <BlockchainWaves className="absolute bottom-1/4 left-[10%] text-blue-600 dark:text-blue-400 opacity-10 hidden lg:block" />
-
-      <div className="container mx-auto p-6 relative z-10">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Welcome back, {user.name}!</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">Here's your investment overview</p>
+    <div className="container mx-auto p-6 space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Welcome back, {user?.name}!</h1>
+          <p className="text-muted-foreground">Track your investments and monitor your portfolio performance</p>
         </div>
+        <Button onClick={() => router.push("/investment-plans")} className="bg-blue-600 hover:bg-blue-700">
+          New Investment
+        </Button>
+      </div>
 
-        {/* Stats Cards */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
-          <Card className="relative">
-            <BlockchainCircuit className="absolute top-2 right-2 w-6 h-6 text-blue-600 dark:text-blue-400 opacity-20" />
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Invested</CardTitle>
-              <Wallet className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">${totalInvested.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground">Across {investments.length} investments</p>
-            </CardContent>
-          </Card>
+      {/* Stats Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatCard
+          title="Total Balance"
+          value={`$${stats.totalBalance.toLocaleString()}`}
+          icon={Wallet}
+          trend="up"
+          trendValue="12.5%"
+          color="text-green-600"
+        />
+        <StatCard
+          title="Total Invested"
+          value={`$${stats.totalInvested.toLocaleString()}`}
+          icon={DollarSign}
+          color="text-blue-600"
+        />
+        <StatCard
+          title="Total Earnings"
+          value={`$${stats.totalEarnings.toLocaleString()}`}
+          icon={TrendingUp}
+          trend="up"
+          trendValue={`${stats.roi.toFixed(1)}%`}
+          color="text-green-600"
+        />
+        <StatCard
+          title="Active Investments"
+          value={stats.activeInvestments.toString()}
+          icon={Target}
+          color="text-purple-600"
+        />
+      </div>
 
-          <Card className="relative">
-            <BlockchainNode className="absolute top-2 right-2 w-6 h-6 text-emerald-600 opacity-20" />
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Earned</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-emerald-600">${totalEarned.toFixed(2)}</div>
-              <p className="text-xs text-muted-foreground">
-                +{((totalEarned / totalInvested) * 100).toFixed(1)}% return
-              </p>
-            </CardContent>
-          </Card>
+      {/* Main Content */}
+      <Tabs defaultValue="overview" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="investments">Investments</TabsTrigger>
+          <TabsTrigger value="transactions">Transactions</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+        </TabsList>
 
-          <Card className="relative">
-            <BlockchainHexagon className="absolute top-2 right-2 w-6 h-6 text-purple-600 opacity-20" />
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Daily Earnings</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">${dailyEarnings.toFixed(2)}</div>
-              <p className="text-xs text-muted-foreground">Expected daily return</p>
-            </CardContent>
-          </Card>
-
-          <Card className="relative">
-            <BlockchainCube className="absolute top-2 right-2 w-6 h-6 text-orange-600 opacity-20" />
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Available Balance</CardTitle>
-              <PieChart className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">${totalEarned.toFixed(2)}</div>
-              <p className="text-xs text-muted-foreground">Ready for withdrawal</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="grid gap-6 lg:grid-cols-3">
-          {/* Active Investments */}
-          <div className="lg:col-span-2">
-            <Card className="relative">
-              <BlockchainNetwork className="absolute right-0 bottom-0 text-blue-600 dark:text-blue-400 opacity-10" />
+        <TabsContent value="overview" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Portfolio Summary */}
+            <Card>
               <CardHeader>
-                <CardTitle>Active Investments</CardTitle>
-                <CardDescription>Your current investment portfolio</CardDescription>
+                <CardTitle className="flex items-center gap-2">
+                  <PieChart className="h-5 w-5" />
+                  Portfolio Summary
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {investments.map((investment) => (
-                    <div key={investment.id} className="border rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <div>
-                          <h3 className="font-semibold">{investment.plan}</h3>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
-                            ${investment.amount.toLocaleString()} invested
-                          </p>
-                        </div>
-                        <Badge variant="secondary" className="bg-emerald-100 text-emerald-800">
-                          {investment.status}
-                        </Badge>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4 mb-3">
-                        <div>
-                          <p className="text-xs text-gray-500">Daily ROI</p>
-                          <p className="font-semibold text-emerald-600">{investment.dailyROI}%</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-500">Total Earned</p>
-                          <p className="font-semibold">${investment.totalEarned}</p>
-                        </div>
-                      </div>
-
-                      <div className="mb-2">
-                        <div className="flex justify-between text-xs text-gray-500 mb-1">
-                          <span>Days remaining</span>
-                          <span>{investment.daysRemaining}/7 days</span>
-                        </div>
-                        <Progress value={((7 - investment.daysRemaining) / 7) * 100} className="h-2" />
-                      </div>
+                  <div className="flex justify-between items-center">
+                    <span>Total Portfolio Value</span>
+                    <span className="text-2xl font-bold text-green-600">${stats.totalBalance.toLocaleString()}</span>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Principal Amount</span>
+                      <span>${stats.totalInvested.toLocaleString()}</span>
                     </div>
-                  ))}
+                    <div className="flex justify-between text-sm">
+                      <span>Total Profits</span>
+                      <span className="text-green-600">+${stats.totalEarnings.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Overall ROI</span>
+                      <span className="text-green-600">+{stats.roi.toFixed(2)}%</span>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
-          </div>
 
-          {/* Quick Actions */}
-          <div className="space-y-6">
-            <Card className="relative">
-              <BlockchainWaves className="absolute right-0 top-0 text-blue-600 dark:text-blue-400 opacity-10" />
+            {/* Recent Activity */}
+            <Card>
               <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button className="w-full bg-emerald-600 hover:bg-emerald-700">
-                  <ArrowUpRight className="mr-2 h-4 w-4" />
-                  New Investment
-                </Button>
-                <Button variant="outline" className="w-full">
-                  <ArrowDownRight className="mr-2 h-4 w-4" />
-                  Withdraw Funds
-                </Button>
-                <Button variant="outline" className="w-full">
-                  <BarChart3 className="mr-2 h-4 w-4" />
-                  View Reports
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card className="relative">
-              <BlockchainCircuit className="absolute right-0 bottom-0 text-blue-600 dark:text-blue-400 opacity-10" />
-              <CardHeader>
-                <CardTitle>Recent Activity</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <Clock className="h-5 w-5" />
+                  Recent Activity
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <div className="w-2 h-2 bg-emerald-500 rounded-full mr-3"></div>
-                      <div>
-                        <p className="text-sm font-medium">ROI Payment</p>
-                        <p className="text-xs text-gray-500">2 hours ago</p>
-                      </div>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
+                    <div className="h-2 w-2 bg-green-500 rounded-full"></div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">Daily ROI Credited</p>
+                      <p className="text-xs text-muted-foreground">2 hours ago</p>
                     </div>
-                    <span className="text-sm font-semibold text-emerald-600">+$52.50</span>
+                    <span className="text-sm font-medium text-green-600">+$52.50</span>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
-                      <div>
-                        <p className="text-sm font-medium">Investment Started</p>
-                        <p className="text-xs text-gray-500">1 day ago</p>
-                      </div>
+                  <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
+                    <div className="h-2 w-2 bg-blue-500 rounded-full"></div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">Investment Started</p>
+                      <p className="text-xs text-muted-foreground">Dec 1, 2024</p>
                     </div>
-                    <span className="text-sm font-semibold">$1,500</span>
+                    <span className="text-sm font-medium">Amateur Plan</span>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <div className="w-2 h-2 bg-emerald-500 rounded-full mr-3"></div>
-                      <div>
-                        <p className="text-sm font-medium">ROI Payment</p>
-                        <p className="text-xs text-gray-500">1 day ago</p>
-                      </div>
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                    <div className="h-2 w-2 bg-gray-500 rounded-full"></div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">Investment Completed</p>
+                      <p className="text-xs text-muted-foreground">Nov 27, 2024</p>
                     </div>
-                    <span className="text-sm font-semibold text-emerald-600">+$12.50</span>
+                    <span className="text-sm font-medium text-green-600">+$87.50</span>
                   </div>
                 </div>
               </CardContent>
             </Card>
           </div>
-        </div>
-      </div>
+        </TabsContent>
+
+        <TabsContent value="investments" className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold">Your Investments</h2>
+            <Button onClick={() => router.push("/investment-plans")}>Start New Investment</Button>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {investments.map((investment) => (
+              <InvestmentCard key={investment.id} investment={investment} />
+            ))}
+          </div>
+
+          {investments.length === 0 && (
+            <Card>
+              <CardContent className="p-12 text-center">
+                <Target className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No Investments Yet</h3>
+                <p className="text-muted-foreground mb-4">Start your investment journey with one of our plans</p>
+                <Button onClick={() => router.push("/investment-plans")}>View Investment Plans</Button>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="transactions" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Transaction History</CardTitle>
+              <CardDescription>View all your investment transactions and earnings</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-12">
+                <BarChart3 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold mb-2">Transaction History</h3>
+                <p className="text-muted-foreground">Detailed transaction history will be available here</p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="analytics" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Investment Analytics</CardTitle>
+              <CardDescription>Detailed analytics and performance metrics</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-12">
+                <BarChart3 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold mb-2">Analytics Dashboard</h3>
+                <p className="text-muted-foreground">Comprehensive analytics and charts will be displayed here</p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }
 
-// Main component that can be safely pre-rendered
 export default function UserDashboard() {
+  const { user, isLoading } = useAuth()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push("/login")
+    }
+  }, [user, isLoading, router])
+
+  if (isLoading) {
+    return <LoadingSpinner message="Loading dashboard..." />
+  }
+
+  if (!user) {
+    return null
+  }
+
   return <UserDashboardContent />
 }
