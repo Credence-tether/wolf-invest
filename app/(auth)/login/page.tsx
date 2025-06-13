@@ -44,12 +44,12 @@ export default function LoginPage() {
     const result = await login(email, password)
 
     if (result.success) {
-      // Redirect based on email (admin emails redirect to admin dashboard)
-      if (email.includes("@wolv-invest.com") || email === "admin@wolv-invest.com") {
-        router.push("/admin/dashboard")
-      } else {
-        router.push("/user/dashboard")
-      }
+      // Redirect based on actual user role from Supabase (admin or user)
+const { user, isAdmin } = useAuth()
+if (result.success) {
+  router.push(isAdmin ? "/admin/dashboard" : "/user/dashboard")
+}
+
     } else {
       setError(result.error || "Login failed")
     }
