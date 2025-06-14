@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { createContext, useContext, useEffect, useState } from "react"
-import { supabase, createProfile, getProfile, updateLastLogin } from "@/lib/supabase"
+import { supabase, getProfile, updateLastLogin } from "@/lib/supabase"
 import type { User as SupabaseUser } from "@supabase/supabase-js"
 
 export type UserRole = "user" | "admin"
@@ -75,7 +75,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loadUserProfile = async (supabaseUser: SupabaseUser) => {
     try {
-      const profile = await getProfile(supabaseUser.id)
+      // Wait a bit for the trigger to create the profile
+      let profile = await getProfile(supabaseUser.id)
+
+      // If profile doesn't exist, wait and try again (trigger might be processing)
+      if (!profile) {
+        console.log("Profile not found, waiting for trigger...")
+        await new Promise((resolve) => setTimeout(resolve, 1000))
+        profile = await getProfile(supabaseUser.id)
+      }
 
       if (profile) {
         setUser({
@@ -92,7 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Update last login (non-blocking)
         updateLastLogin(supabaseUser.id).catch(console.warn)
       } else {
-        console.error("Profile not found for user:", supabaseUser.id)
+        console.error("Profile still not found for user:", supabaseUser.id)
       }
     } catch (error) {
       console.error("Error loading user profile:", error)
@@ -105,7 +113,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log("Starting registration for:", email)
 
-      // Step 1: Create auth user
+      // Create auth user - the trigger will handle profile creation
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
@@ -128,15 +136,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       console.log("Auth user created:", authData.user.id)
-
-      // Step 2: Create profile (the trigger should handle this, but we'll do it manually as backup)
-      try {
-        await createProfile(authData.user.id, email, name)
-        console.log("Profile created successfully")
-      } catch (profileError) {
-        console.warn("Profile creation failed, but user was created:", profileError)
-        // Don't fail registration if profile creation fails - the trigger might have handled it
-      }
 
       setIsLoading(false)
 

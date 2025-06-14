@@ -28,45 +28,6 @@ export interface Profile {
   has_completed_kyc?: boolean
 }
 
-// Database helper functions with better error handling
-export const createProfile = async (userId: string, email: string, fullName: string) => {
-  try {
-    // First check if profile already exists
-    const { data: existingProfile } = await supabase.from("profiles").select("id").eq("id", userId).maybeSingle()
-
-    if (existingProfile) {
-      console.log("Profile already exists for user:", userId)
-      return existingProfile
-    }
-
-    // Create new profile with all required fields
-    const profileData = {
-      id: userId,
-      email,
-      full_name: fullName,
-      username: email.split("@")[0], // Generate username from email
-      role: "user" as const,
-      is_active: true,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      has_completed_kyc: false,
-    }
-
-    const { data, error } = await supabase.from("profiles").insert([profileData]).select().single()
-
-    if (error) {
-      console.error("Error creating profile:", error)
-      throw error
-    }
-
-    console.log("Profile created successfully:", data)
-    return data
-  } catch (error) {
-    console.error("Profile creation failed:", error)
-    throw error
-  }
-}
-
 export const getProfile = async (userId: string): Promise<Profile | null> => {
   try {
     const { data, error } = await supabase.from("profiles").select("*").eq("id", userId).maybeSingle()
@@ -100,25 +61,6 @@ export const updateLastLogin = async (userId: string) => {
     }
   } catch (error) {
     console.warn("Could not update last login:", error)
-  }
-}
-
-// Simple connection test that doesn't trigger RLS policies
-export const testConnection = async () => {
-  try {
-    // Test connection with a simple query that doesn't involve RLS
-    const { data, error } = await supabase.from("profiles").select("count").limit(1).maybeSingle()
-
-    if (error) {
-      console.error("Database connection test failed:", error)
-      return false
-    }
-
-    console.log("Database connection successful")
-    return true
-  } catch (error) {
-    console.error("Database connection error:", error)
-    return false
   }
 }
 
