@@ -28,7 +28,12 @@ export default function AuthNavbar() {
 
   const handleLogout = () => {
     logout()
+    setIsMenuOpen(false) // Close menu on logout
     window.location.href = "/"
+  }
+
+  const closeMenu = () => {
+    setIsMenuOpen(false)
   }
 
   if (!mounted) {
@@ -39,7 +44,7 @@ export default function AuthNavbar() {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-2">
-          <Link href="/" className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2" onClick={closeMenu}>
             <Image
               src="/images/wolv-invest-logo.png"
               alt="WOLV-INVEST"
@@ -149,24 +154,20 @@ export default function AuthNavbar() {
       {isMenuOpen && (
         <div className="container md:hidden py-4">
           <nav className="flex flex-col gap-4">
-            <Link
-              href="/"
-              className="text-sm font-medium hover:text-blue-600 transition-colors"
-              onClick={() => setIsMenuOpen(false)}
-            >
+            <Link href="/" className="text-sm font-medium hover:text-blue-600 transition-colors" onClick={closeMenu}>
               Home
             </Link>
             <Link
               href="/about"
               className="text-sm font-medium hover:text-blue-600 transition-colors"
-              onClick={() => setIsMenuOpen(false)}
+              onClick={closeMenu}
             >
               About
             </Link>
             <Link
               href="/investment-plans"
               className="text-sm font-medium hover:text-blue-600 transition-colors"
-              onClick={() => setIsMenuOpen(false)}
+              onClick={closeMenu}
             >
               Investment Plans
             </Link>
@@ -175,7 +176,7 @@ export default function AuthNavbar() {
                 <Link
                   href={isAdmin ? "/admin/dashboard" : "/user/dashboard"}
                   className="text-sm font-medium hover:text-blue-600 transition-colors"
-                  onClick={() => setIsMenuOpen(false)}
+                  onClick={closeMenu}
                 >
                   Dashboard
                 </Link>
@@ -183,7 +184,7 @@ export default function AuthNavbar() {
                   <Link
                     href="/admin/users"
                     className="text-sm font-medium hover:text-blue-600 transition-colors flex items-center gap-2"
-                    onClick={() => setIsMenuOpen(false)}
+                    onClick={closeMenu}
                   >
                     <Shield className="h-4 w-4" />
                     Admin Panel
@@ -196,12 +197,12 @@ export default function AuthNavbar() {
               </>
             ) : (
               <>
-                <Link href="/login" onClick={() => setIsMenuOpen(false)}>
+                <Link href="/login" onClick={closeMenu}>
                   <Button variant="ghost" className="w-full">
                     Sign In
                   </Button>
                 </Link>
-                <Link href="/register" onClick={() => setIsMenuOpen(false)}>
+                <Link href="/register" onClick={closeMenu}>
                   <Button className="bg-blue-600 hover:bg-blue-700 w-full">Get Started</Button>
                 </Link>
               </>

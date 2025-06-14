@@ -1,6 +1,9 @@
+import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, BarChart3, Shield, TrendingUp, Globe, Zap } from "lucide-react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { ArrowRight, Shield, TrendingUp, Users, DollarSign, Clock, Award, CheckCircle } from "lucide-react"
 import {
   BlockchainNode,
   BlockchainCube,
@@ -10,199 +13,247 @@ import {
   BlockchainWaves,
   BlockchainCircuit,
 } from "@/components/blockchain-illustrations"
+import MainLayout from "@/components/main-layout"
 
-export default function Home() {
+export default function HomePage() {
   return (
-    <div className="flex flex-col">
-      {/* Hero Section with Web3 Design */}
-      <section className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 relative overflow-hidden">
-        {/* Web3 Background Elements */}
-        <div className="absolute inset-0 opacity-20">
-          <div className="absolute top-20 left-20 w-32 h-32 border border-blue-400 rounded-full animate-pulse"></div>
-          <div className="absolute top-40 right-32 w-24 h-24 border border-blue-300 rounded-lg rotate-45 animate-bounce"></div>
-          <div className="absolute bottom-32 left-40 w-20 h-20 bg-blue-400 rounded-full opacity-30 animate-ping"></div>
-          <div className="absolute bottom-20 right-20 w-28 h-28 border-2 border-blue-500 rounded-full animate-spin"></div>
-          {/* Blockchain network visualization */}
-          <svg className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse">
-                <path d="M 50 0 L 0 0 0 50" fill="none" stroke="rgba(59, 130, 246, 0.1)" strokeWidth="1" />
-              </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#grid)" />
-          </svg>
-        </div>
+    <MainLayout>
+      <div className="flex flex-col min-h-screen">
+        {/* Hero Section */}
+        <section className="relative py-20 px-4 bg-gradient-to-br from-blue-900 via-blue-800 to-purple-900 text-white overflow-hidden">
+          <div className="absolute inset-0 bg-black/20"></div>
 
-        {/* Added blockchain illustrations */}
-        <BlockchainNode className="absolute top-10 left-[10%] text-blue-300 opacity-40 hidden md:block" />
-        <BlockchainCube className="absolute bottom-10 right-[5%] text-blue-300 opacity-40 hidden md:block" />
-        <BlockchainHexagon className="absolute top-1/4 right-[15%] text-blue-300 opacity-30 hidden lg:block" />
+          {/* Blockchain Illustrations Background */}
+          <div className="absolute inset-0 opacity-20">
+            <BlockchainNode className="absolute top-10 left-[10%] text-blue-300 opacity-40 hidden md:block" />
+            <BlockchainCube className="absolute bottom-10 right-[5%] text-blue-300 opacity-40 hidden md:block" />
+            <BlockchainHexagon className="absolute top-1/4 right-[15%] text-blue-300 opacity-30 hidden lg:block" />
+            <BlockchainConnection className="absolute left-0 top-1/3 text-blue-400 opacity-30" />
+            <BlockchainWaves className="absolute right-0 bottom-1/3 text-blue-400 opacity-30" />
+            <BlockchainCircuit className="absolute left-[20%] bottom-20 text-blue-300 opacity-25 hidden lg:block" />
+            <BlockchainNetwork className="absolute right-[20%] top-20 text-blue-300 opacity-25 hidden lg:block" />
+          </div>
 
-        <div className="container px-4 md:px-6 relative z-10">
-          <div className="flex flex-col items-center space-y-4 text-center">
-            <div className="space-y-2">
-              <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none text-white">
-                Invest in Your Future with{" "}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">
-                  WOLV-INVEST
-                </span>
-              </h1>
+          <div className="container mx-auto text-center relative z-10">
+            <Badge className="mb-6 bg-blue-600/20 text-blue-200 border-blue-400/30">
+              🚀 Next-Generation Crypto Investment Platform
+            </Badge>
 
-              {/* Add the WOLV-INVEST image */}
-              <div className="relative w-full max-w-md mx-auto my-8">
-                <img
+            <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
+              Invest in Your Future with WOLV-INVEST
+            </h1>
+
+            {/* Platform Image */}
+            <div className="mb-8 relative">
+              <div className="relative mx-auto max-w-2xl">
+                <Image
                   src="/images/wolv-invest.jpg"
-                  alt="WOLV-INVEST Platform Interface"
-                  className="rounded-xl shadow-2xl border border-blue-400/30"
+                  alt="WOLV-INVEST Platform"
+                  width={800}
+                  height={600}
+                  className="rounded-2xl shadow-2xl border border-blue-400/20"
+                  priority
                 />
-                <div className="absolute -bottom-3 -right-3 bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-1 rounded-full text-white text-xs font-medium">
+                <div className="absolute -top-4 -right-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg">
                   Next-gen crypto investing
                 </div>
               </div>
+            </div>
 
-              <p className="mx-auto max-w-[700px] text-blue-200 md:text-xl">
-                Your gateway to blockchain-powered investments with industry-leading security, transparency, and
-                returns. Our platform combines cutting-edge technology with expert market analysis to maximize your
-                crypto investment potential.
+            {/* Site Description */}
+            <div className="mb-8 max-w-4xl mx-auto">
+              <p className="text-xl md:text-2xl mb-4 text-blue-100">
+                Experience the future of cryptocurrency investment with our cutting-edge platform
+              </p>
+              <p className="text-lg text-blue-200 leading-relaxed">
+                WOLV-INVEST combines advanced blockchain technology with intelligent investment strategies to deliver
+                consistent returns. Our platform offers daily ROI of 2-5% across multiple investment plans, backed by
+                expert analysis and secure infrastructure. Join thousands of smart investors who trust WOLV-INVEST for
+                their crypto investment journey.
               </p>
             </div>
-            <div className="space-x-4">
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
               <Link href="/register">
-                <Button className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white">
-                  Get Started
-                  <ArrowRight className="ml-2 h-4 w-4" />
+                <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg">
+                  Start Investing Today
+                  <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
-              <Link href="/about">
-                <Button variant="outline" className="text-white border-white hover:bg-blue-800/50">
-                  Learn More
+              <Link href="/investment-plans">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="border-blue-400 text-blue-100 hover:bg-blue-800/50 px-8 py-4 text-lg"
+                >
+                  View Investment Plans
+                </Button>
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+              <div className="text-center">
+                <div className="bg-blue-600/20 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                  <TrendingUp className="h-8 w-8 text-blue-300" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">2-5% Daily ROI</h3>
+                <p className="text-blue-200">Consistent returns on your investments</p>
+              </div>
+              <div className="text-center">
+                <div className="bg-blue-600/20 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                  <Shield className="h-8 w-8 text-blue-300" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Secure Platform</h3>
+                <p className="text-blue-200">Bank-level security for your investments</p>
+              </div>
+              <div className="text-center">
+                <div className="bg-blue-600/20 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                  <Users className="h-8 w-8 text-blue-300" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Expert Support</h3>
+                <p className="text-blue-200">Dedicated account managers</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Investment Plans Preview */}
+        <section className="py-20 px-4 bg-gray-50 dark:bg-gray-900 relative">
+          {/* Background illustrations */}
+          <BlockchainConnection className="absolute left-0 top-1/4 text-blue-600 dark:text-blue-400 opacity-10" />
+          <BlockchainWaves className="absolute right-0 bottom-1/4 text-blue-600 dark:text-blue-400 opacity-10" />
+
+          <div className="container mx-auto relative z-10">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">Choose Your Investment Plan</h2>
+              <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+                Select from our carefully designed investment plans to match your financial goals
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {[
+                {
+                  name: "Basic Plan",
+                  range: "$200 - $999",
+                  roi: "2-3%",
+                  duration: "20 days",
+                  features: ["Perfect for beginners", "Steady returns", "Basic support"],
+                },
+                {
+                  name: "Amateur Plan",
+                  range: "$1,000 - $1,999",
+                  roi: "3-4%",
+                  duration: "20 days",
+                  features: ["Higher returns", "Expert advice", "Priority support"],
+                },
+                {
+                  name: "Retirement Plan",
+                  range: "Custom",
+                  roi: "4-5%",
+                  duration: "20 days",
+                  features: ["Long-term focus", "Loan services", "Personal planning"],
+                },
+                {
+                  name: "VIP Plan",
+                  range: "Premium",
+                  roi: "4-5%",
+                  duration: "20 days",
+                  features: ["Exclusive benefits", "VIP support", "Maximum returns"],
+                },
+              ].map((plan, index) => (
+                <Card key={index} className="relative overflow-hidden hover:shadow-lg transition-shadow">
+                  <CardHeader>
+                    <CardTitle className="text-xl">{plan.name}</CardTitle>
+                    <CardDescription className="text-2xl font-bold text-blue-600">{plan.roi} Daily ROI</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">Investment Range</p>
+                        <p className="font-semibold">{plan.range}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">Duration</p>
+                        <p className="font-semibold">{plan.duration}</p>
+                      </div>
+                      <div className="space-y-2">
+                        {plan.features.map((feature, idx) => (
+                          <div key={idx} className="flex items-center gap-2">
+                            <CheckCircle className="h-4 w-4 text-green-500" />
+                            <span className="text-sm">{feature}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            <div className="text-center mt-12">
+              <Link href="/investment-plans">
+                <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
+                  View All Plans
+                  <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Features Section with Web3 Icons */}
-      <section className="w-full py-12 md:py-24 lg:py-32 bg-gray-50 dark:bg-gray-900 relative">
-        {/* Subtle Web3 background */}
-        <div className="absolute inset-0 opacity-5">
-          <div className="absolute top-10 left-10 w-20 h-20 border border-blue-400 rounded-full"></div>
-          <div className="absolute bottom-10 right-10 w-16 h-16 border border-blue-300 rounded-lg rotate-12"></div>
-        </div>
+        {/* Stats Section */}
+        <section className="py-20 px-4 bg-blue-600 text-white relative">
+          {/* Background illustrations */}
+          <BlockchainCircuit className="absolute left-[5%] top-1/2 -translate-y-1/2 text-white opacity-10 hidden lg:block" />
+          <BlockchainNetwork className="absolute right-[5%] top-1/2 -translate-y-1/2 text-white opacity-10 hidden lg:block" />
 
-        {/* Added blockchain illustrations */}
-        <BlockchainConnection className="absolute left-0 top-1/4 text-blue-600 dark:text-blue-400 opacity-20" />
-        <BlockchainWaves className="absolute right-0 bottom-1/4 text-blue-600 dark:text-blue-400 opacity-20" />
-
-        <div className="container px-4 md:px-6 relative z-10">
-          <div className="flex flex-col items-center justify-center space-y-4 text-center">
-            <div className="space-y-2">
-              <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
-                Why Choose{" "}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-600">
-                  WOLV-INVEST
-                </span>
-              </h2>
-              <p className="mx-auto max-w-[700px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
-                We offer a unique Web3 investment experience with competitive returns and cutting-edge technology.
-              </p>
+          <div className="container mx-auto relative z-10">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
+              <div>
+                <DollarSign className="h-12 w-12 mx-auto mb-4 text-blue-200" />
+                <div className="text-3xl font-bold mb-2">$50M+</div>
+                <div className="text-blue-200">Total Investments</div>
+              </div>
+              <div>
+                <Users className="h-12 w-12 mx-auto mb-4 text-blue-200" />
+                <div className="text-3xl font-bold mb-2">25K+</div>
+                <div className="text-blue-200">Active Investors</div>
+              </div>
+              <div>
+                <Clock className="h-12 w-12 mx-auto mb-4 text-blue-200" />
+                <div className="text-3xl font-bold mb-2">99.9%</div>
+                <div className="text-blue-200">Uptime</div>
+              </div>
+              <div>
+                <Award className="h-12 w-12 mx-auto mb-4 text-blue-200" />
+                <div className="text-3xl font-bold mb-2">5 Years</div>
+                <div className="text-blue-200">Experience</div>
+              </div>
             </div>
           </div>
-          <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 py-12 md:grid-cols-3">
-            <div className="flex flex-col items-center space-y-2 rounded-lg border p-6 shadow-sm bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950 dark:to-cyan-950">
-              <div className="p-3 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-full">
-                <BarChart3 className="h-8 w-8 text-white" />
-              </div>
-              <h3 className="text-xl font-bold">Competitive Returns</h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
-                Enjoy daily ROI of 2-5% with our advanced blockchain-powered investment algorithms.
-              </p>
-            </div>
-            <div className="flex flex-col items-center space-y-2 rounded-lg border p-6 shadow-sm bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950">
-              <div className="p-3 bg-gradient-to-r from-green-600 to-emerald-600 rounded-full">
-                <Shield className="h-8 w-8 text-white" />
-              </div>
-              <h3 className="text-xl font-bold">Secure & Transparent</h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
-                Your investments are protected by military-grade encryption and blockchain transparency.
-              </p>
-            </div>
-            <div className="flex flex-col items-center space-y-2 rounded-lg border p-6 shadow-sm bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950 dark:to-pink-950">
-              <div className="p-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full">
-                <Globe className="h-8 w-8 text-white" />
-              </div>
-              <h3 className="text-xl font-bold">Global Community</h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
-                Join a vibrant global community of Web3 investors and blockchain enthusiasts.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Stats Section */}
-      <section className="w-full py-12 md:py-24 lg:py-32 bg-white dark:bg-gray-800 relative">
-        {/* Added blockchain illustrations */}
-        <BlockchainCircuit className="absolute left-[5%] top-1/2 -translate-y-1/2 text-blue-600 dark:text-blue-400 opacity-20 hidden lg:block" />
-        <BlockchainNetwork className="absolute right-[5%] top-1/2 -translate-y-1/2 text-blue-600 dark:text-blue-400 opacity-20 hidden lg:block" />
+        {/* CTA Section */}
+        <section className="py-20 px-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white relative overflow-hidden">
+          {/* Background illustrations */}
+          <BlockchainHexagon className="absolute left-[10%] bottom-10 text-white opacity-20 hidden md:block" />
+          <BlockchainNode className="absolute right-[10%] top-10 text-white opacity-20 hidden md:block" />
 
-        <div className="container px-4 md:px-6">
-          <div className="grid gap-6 lg:grid-cols-4 md:grid-cols-2">
-            <div className="flex flex-col items-center space-y-2 text-center">
-              <div className="text-3xl font-bold text-blue-600">$2.8M+</div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Total Invested</p>
-            </div>
-            <div className="flex flex-col items-center space-y-2 text-center">
-              <div className="text-3xl font-bold text-green-600">1,247</div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Active Investors</p>
-            </div>
-            <div className="flex flex-col items-center space-y-2 text-center">
-              <div className="text-3xl font-bold text-purple-600">892</div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Active Investments</p>
-            </div>
-            <div className="flex flex-col items-center space-y-2 text-center">
-              <div className="text-3xl font-bold text-orange-600">4.2%</div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Average Daily ROI</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-r from-blue-600 to-cyan-600 relative overflow-hidden">
-        {/* Web3 CTA Background */}
-        <div className="absolute inset-0 opacity-20">
-          <div className="absolute top-10 left-10 w-24 h-24 border border-white rounded-full animate-pulse"></div>
-          <div className="absolute bottom-10 right-10 w-20 h-20 border border-white rounded-lg rotate-45 animate-bounce"></div>
-          <Zap className="absolute top-1/2 left-1/4 h-16 w-16 text-white opacity-10 animate-ping" />
-          <TrendingUp className="absolute top-1/3 right-1/4 h-12 w-12 text-white opacity-10 animate-pulse" />
-        </div>
-
-        {/* Added blockchain illustrations */}
-        <BlockchainHexagon className="absolute left-[10%] bottom-10 text-white opacity-20 hidden md:block" />
-        <BlockchainNode className="absolute right-[10%] top-10 text-white opacity-20 hidden md:block" />
-
-        <div className="container px-4 md:px-6 relative z-10">
-          <div className="flex flex-col items-center justify-center space-y-4 text-center text-white">
-            <div className="space-y-2">
-              <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
-                Ready to Start Your Web3 Investment Journey?
-              </h2>
-              <p className="mx-auto max-w-[700px] md:text-xl/relaxed">
-                Join thousands of smart investors who trust WOLV-INVEST for their financial growth in the digital
-                economy.
-              </p>
-            </div>
+          <div className="container mx-auto text-center relative z-10">
+            <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to Start Your Investment Journey?</h2>
+            <p className="text-xl mb-8 max-w-2xl mx-auto">
+              Join thousands of smart investors who trust WOLV-INVEST for consistent returns and professional service.
+            </p>
             <Link href="/register">
-              <Button className="bg-white text-blue-600 hover:bg-gray-100 text-lg px-8 py-3">
-                Start Investing Now
+              <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100 px-8 py-4 text-lg">
+                Get Started Now
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
           </div>
-        </div>
-      </section>
-    </div>
+        </section>
+      </div>
+    </MainLayout>
   )
 }

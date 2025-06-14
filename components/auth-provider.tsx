@@ -1,7 +1,9 @@
 "use client"
 
-import React, { createContext, useContext, useEffect, useState } from "react"
+import type React from "react"
+import { createContext, useContext, useEffect, useState } from "react"
 import { supabase, createProfile, getProfile, updateLastLogin } from "@/lib/supabase"
+import type { User as SupabaseUser } from "@supabase/supabase-js"
 
 export type UserRole = "user" | "admin"
 
@@ -19,7 +21,10 @@ export interface User {
 type AuthContextType = {
   user: User | null
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
-  register: (userData: { name: string; email: string; password: string }) => Promise<{ success: boolean; error?: string }>
+  register: (userData: { name: string; email: string; password: string }) => Promise<{
+    success: boolean
+    error?: string
+  }>
   logout: () => void
   isLoading: boolean
   isAuthenticated: boolean
@@ -31,95 +36,173 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    const fetchUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
+    setMounted(true)
 
-      if (user) {
-        const profile = await getProfile(user.id)
-        if (profile) {
-          setUser({
-            id: user.id,
-            name: profile.full_name,
-            email: profile.email,
-            role: profile.role,
-            isActive: profile.is_active,
-            avatar: profile.avatar_url,
-            createdAt: profile.created_at,
-            lastLogin: profile.last_login,
-          })
+    const fetchUser = async () => {
+      try {
+        const {
+          data: { user: supabaseUser },
+        } = await supabase.auth.getUser()
+
+        if (supabaseUser) {
+          await loadUserProfile(supabaseUser)
         }
+      } catch (error) {
+        console.error("Error fetching initial user:", error)
       }
     }
 
     fetchUser()
+
+    // Listen for auth state changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state changed:", event)
+
+      if (event === "SIGNED_IN" && session?.user) {
+        await loadUserProfile(session.user)
+      } else if (event === "SIGNED_OUT") {
+        setUser(null)
+      }
+    })
+
+    return () => subscription.unsubscribe()
   }, [])
+
+  const loadUserProfile = async (supabaseUser: SupabaseUser) => {
+    try {
+      const profile = await getProfile(supabaseUser.id)
+
+      if (profile) {
+        setUser({
+          id: supabaseUser.id,
+          name: profile.full_name,
+          email: profile.email,
+          role: profile.role,
+          isActive: profile.is_active ?? true,
+          avatar: profile.avatar_url,
+          createdAt: profile.created_at,
+          lastLogin: profile.last_login,
+        })
+
+        // Update last login (non-blocking)
+        updateLastLogin(supabaseUser.id).catch(console.warn)
+      } else {
+        console.error("Profile not found for user:", supabaseUser.id)
+      }
+    } catch (error) {
+      console.error("Error loading user profile:", error)
+    }
+  }
 
   const register = async ({ name, email, password }: { name: string; email: string; password: string }) => {
     setIsLoading(true)
+
     try {
-      const { data, error } = await supabase.auth.signUp({
+      console.log("Starting registration for:", email)
+
+      // Step 1: Create auth user
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            full_name: name,
+          },
+        },
       })
 
-      if (error || !data.user) {
+      if (authError) {
+        console.error("Auth signup error:", authError)
         setIsLoading(false)
-        return { success: false, error: error?.message || "Registration failed" }
+        return { success: false, error: authError.message }
       }
 
-      await createProfile(data.user.id, email, name)
+      if (!authData.user) {
+        setIsLoading(false)
+        return { success: false, error: "Failed to create user account" }
+      }
+
+      console.log("Auth user created:", authData.user.id)
+
+      // Step 2: Create profile (the trigger should handle this, but we'll do it manually as backup)
+      try {
+        await createProfile(authData.user.id, email, name)
+        console.log("Profile created successfully")
+      } catch (profileError) {
+        console.warn("Profile creation failed, but user was created:", profileError)
+        // Don't fail registration if profile creation fails - the trigger might have handled it
+      }
+
       setIsLoading(false)
+
+      // Check if email confirmation is required
+      if (!authData.user.email_confirmed_at) {
+        return {
+          success: true,
+          error: "Please check your email and click the confirmation link to complete registration.",
+        }
+      }
+
       return { success: true }
     } catch (error) {
+      console.error("Registration error:", error)
       setIsLoading(false)
-      return { success: false, error: "Registration error" }
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Registration failed. Please try again.",
+      }
     }
   }
 
   const login = async (email: string, password: string) => {
     setIsLoading(true)
+
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+      console.log("Starting login for:", email)
 
-      if (error || !data.user) {
-        setIsLoading(false)
-        return { success: false, error: error?.message || "Login failed" }
-      }
-
-      const profile = await getProfile(data.user.id)
-      if (!profile) {
-        setIsLoading(false)
-        return { success: false, error: "User profile not found" }
-      }
-
-      await updateLastLogin(data.user.id)
-
-      setUser({
-        id: data.user.id,
-        name: profile.full_name,
-        email: profile.email,
-        role: profile.role,
-        isActive: profile.is_active,
-        avatar: profile.avatar_url,
-        createdAt: profile.created_at,
-        lastLogin: profile.last_login,
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       })
 
+      if (error) {
+        console.error("Login error:", error)
+        setIsLoading(false)
+        return { success: false, error: error.message }
+      }
+
+      if (!data.user) {
+        setIsLoading(false)
+        return { success: false, error: "Login failed" }
+      }
+
+      console.log("Login successful for:", data.user.id)
+
+      // Profile will be loaded by the auth state change listener
       setIsLoading(false)
       return { success: true }
-    } catch (err) {
+    } catch (error) {
+      console.error("Login error:", error)
       setIsLoading(false)
-      return { success: false, error: "Login error" }
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Login failed. Please try again.",
+      }
     }
   }
 
   const logout = async () => {
-    await supabase.auth.signOut()
-    setUser(null)
+    try {
+      await supabase.auth.signOut()
+      setUser(null)
+    } catch (error) {
+      console.error("Logout error:", error)
+    }
   }
 
   const isAuthenticated = !!user
@@ -148,4 +231,4 @@ export function useAuth() {
     throw new Error("useAuth must be used within an AuthProvider")
   }
   return context
-    }
+}
