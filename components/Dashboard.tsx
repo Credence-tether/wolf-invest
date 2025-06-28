@@ -1,3 +1,4 @@
+import RecentActivity from './RecentActivity';
 import React from 'react';
 
 interface Investment {
@@ -12,6 +13,7 @@ interface UserData {
   walletBalance?: number;
   investments?: Investment[];
   isAdmin?: boolean;
+  activities?: any[]; // Replace 'any' with the correct type if known (e.g., Activity[])
 }
 
 const Dashboard: React.FC<{ userData: UserData }> = ({ userData }) => {
@@ -39,23 +41,24 @@ const Dashboard: React.FC<{ userData: UserData }> = ({ userData }) => {
         </div>
       </section>
 
-      {/* Investment Section */}
-      <section className="mt-8 px-6">
-        <h2 className="text-xl font-semibold mb-4">Your Investments</h2>
-        {userData?.investments?.length ? (
-          <div className="grid gap-4 md:grid-cols-2">
-            {userData.investments.map((inv, idx) => (
-              <div key={idx} className="bg-white p-4 rounded shadow">
-                <h3 className="font-semibold">{inv.planName}</h3>
-                <p>Amount: ₦{inv.amount}</p>
-                <p>Status: {inv.status}</p>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-gray-500">You have no active investments.</p>
-        )}
-      </section>
+{/* Investment Section */}
+<RecentActivity activities={userData.activities || []} />
+<section className="mt-8 px-6">
+  <h2 className="text-xl font-semibold mb-4">Your Investments</h2>
+  {userData.investments && userData.investments.length > 0 ? (
+    userData.investments.map((inv, idx) => (
+      <div key={idx} className="bg-white p-4 rounded shadow mb-4">
+        <h3 className="font-semibold">
+          {inv.planName || 'Unnamed Plan'}
+        </h3>
+        <p>Amount: ${inv.amount}</p>
+        <p>Status: {inv.status}</p>
+      </div>
+    ))
+  ) : (
+    <p className="text-gray-500">You have no active investments.</p>
+  )}
+</section>
 
       {/* Actions & Settings */}
       <section className="mt-8 px-6">

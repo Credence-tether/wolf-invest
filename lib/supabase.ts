@@ -1,6 +1,6 @@
-import { createClient } from "@supabase/supabase-js"
+import { createClient } from "@supabase/supabase-js";
 
-// Client-side Supabase client
+console.log("Supabase URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
@@ -89,6 +89,10 @@ export const isCurrentUserAdmin = async (): Promise<boolean> => {
     return profile?.role === "admin" && profile?.is_active === true
   } catch (error) {
     console.error("Error checking admin status:", error)
-    return false
+  
+// This is a stub for TypeScript type checking only.
+// The actual createClient is imported from "@supabase/supabase-js" above.
+// No implementation needed here.
+  return false
   }
 }
