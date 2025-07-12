@@ -1,0 +1,33 @@
+name: Auto merge main into wolv
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v3
+        with:
+          ref: main
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Merge main into wolv
+        run: |
+          git fetch origin wolv
+          git checkout wolv
+          git merge origin/main --no-edit
+          git push origin wolv
