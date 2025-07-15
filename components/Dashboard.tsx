@@ -7,13 +7,20 @@ interface Investment {
   status: string;
 }
 
+interface Activity {
+  id: number;
+  type: 'deposit' | 'withdrawal' | 'plan_created';
+  amount: number;
+  date: string;
+}
+
 interface UserData {
   fullName: string;
   avatarUrl?: string;
   walletBalance?: number;
   investments?: Investment[];
   isAdmin?: boolean;
-  activities?: any[]; // Replace 'any' with the correct type if known (e.g., Activity[])
+  activities?: Activity[];
 }
 
 const Dashboard: React.FC<{ userData: UserData }> = ({ userData }) => {
@@ -41,24 +48,26 @@ const Dashboard: React.FC<{ userData: UserData }> = ({ userData }) => {
         </div>
       </section>
 
-{/* Investment Section */}
-<RecentActivity activities={userData.activities || []} />
-<section className="mt-8 px-6">
-  <h2 className="text-xl font-semibold mb-4">Your Investments</h2>
-  {userData.investments && userData.investments.length > 0 ? (
-    userData.investments.map((inv, idx) => (
-      <div key={idx} className="bg-white p-4 rounded shadow mb-4">
-        <h3 className="font-semibold">
-          {inv.planName || 'Unnamed Plan'}
-        </h3>
-        <p>Amount: ${inv.amount}</p>
-        <p>Status: {inv.status}</p>
-      </div>
-    ))
-  ) : (
-    <p className="text-gray-500">You have no active investments.</p>
-  )}
-</section>
+      {/* Recent Activity */}
+      <RecentActivity activities={userData.activities || []} />
+
+      {/* Investment Section */}
+      <section className="mt-8 px-6">
+        <h2 className="text-xl font-semibold mb-4">Your Investments</h2>
+        {userData.investments && userData.investments.length > 0 ? (
+          userData.investments.map((inv, idx) => (
+            <div key={idx} className="bg-white p-4 rounded shadow mb-4">
+              <h3 className="font-semibold">
+                {inv.planName || 'Unnamed Plan'}
+              </h3>
+              <p>Amount: ₦{inv.amount}</p>
+              <p>Status: {inv.status}</p>
+            </div>
+          ))
+        ) : (
+          <p className="text-gray-500">You have no active investments.</p>
+        )}
+      </section>
 
       {/* Actions & Settings */}
       <section className="mt-8 px-6">
