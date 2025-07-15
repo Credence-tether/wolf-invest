@@ -36,7 +36,7 @@ export async function getServerUser(): Promise<User | null> {
       email: profile.email,
       role: profile.role as UserRole,
       avatar: profile.avatar_url,
-      isActive: profile.is_active,
+      isActive: profile.is_active ?? false,
       createdAt: profile.created_at,
       lastLogin: profile.last_login || undefined,
       hasCompletedKYC: profile.has_completed_kyc,
