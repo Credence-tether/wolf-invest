@@ -1,20 +1,16 @@
 "use client"
 
-import type React from "react"
-
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import Image from "next/image"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Loader2, UserPlus, CheckCircle } from "lucide-react"
+import { Eye, EyeOff, Loader2, CheckCircle } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
-import { LoadingSpinner } from "@/components/loading-spinner"
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -23,288 +19,259 @@ export default function RegisterPage() {
     password: "",
     confirmPassword: "",
     agreeToTerms: false,
-    agreeToRisk: false,
   })
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [error, setError] = useState("")
-  const [success, setSuccess] = useState(false)
-  const [mounted, setMounted] = useState(false)
-  const { register, isLoading } = useAuth()
+  const [isRegistered, setIsRegistered] = useState(false)
   const router = useRouter()
-  const [confirmationMessage, setConfirmationMessage] = useState("")
 
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+  const { register, isLoading } = useAuth()
 
-  // Don't render until mounted to avoid hydration issues
-  if (!mounted) {
-    return <LoadingSpinner message="Initializing..." />
+  const validateForm = () => {
+    if (!formData.name.trim()) {
+      setError("Full name is required")
+      return false
+    }
+
+    if (formData.name.trim().length < 2) {
+      setError("Full name must be at least 2 characters")
+      return false
+    }
+
+    if (!formData.email) {
+      setError("Email address is required")
+      return false
+    }
+
+    if (!formData.email.includes("@")) {
+      setError("Please enter a valid email address")
+      return false
+    }
+
+    if (!formData.password) {
+      setError("Password is required")
+      return false
+    }
+
+    if (formData.password.length < 6) {
+      setError("Password must be at least 6 characters")
+      return false
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match")
+      return false
+    }
+
+    if (!formData.agreeToTerms) {
+      setError("You must agree to the terms and conditions")
+      return false
+    }
+
+    return true
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
 
-    if (!formData.name || !formData.email || !formData.password || !formData.confirmPassword) {
-      setError("Please fill in all fields")
+    if (!validateForm()) {
       return
     }
 
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match")
-      return
-    }
-
-    if (formData.password.length < 8) {
-      setError("Password must be at least 8 characters long")
-      return
-    }
-
-    if (!formData.agreeToTerms) {
-      setError("Please agree to the Terms and Conditions")
-      return
-    }
-
-    if (!formData.agreeToRisk) {
-      setError("Please acknowledge the risk disclosure")
-      return
-    }
-
-    const result = await register({
-      name: formData.name,
-      email: formData.email,
-      password: formData.password,
-    })
-
-    if (result.success) {
-      setSuccess(true)
-      if (result.error) {
-        setConfirmationMessage(result.error)
+    try {
+      const result = await register({
+        name: formData.name.trim(),
+        email: formData.email.trim().toLowerCase(),
+        password: formData.password,
+      })
+      
+      if (result.success) {
+        setIsRegistered(true)
+        setTimeout(() => {
+          router.push("/login")
+        }, 3000)
+      } else {
+        setError(result.error || "Registration failed")
       }
-      setTimeout(() => {
-        router.push("/login")
-      }, 5000)
-    } else {
-      setError(result.error || "Registration failed")
+    } catch (err) {
+      setError("An unexpected error occurred")
     }
   }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }))
+  const handleInputChange = (field: string, value: string | boolean) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
+    if (error) setError("")
   }
 
-  if (success) {
+  if (isRegistered) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-900 via-green-800 to-green-900 p-4">
-        <Card className="border-green-700 bg-green-800/50 backdrop-blur-lg shadow-2xl max-w-md w-full">
-          <CardContent className="pt-6">
-            <div className="text-center space-y-4">
-              <CheckCircle className="h-16 w-16 text-green-400 mx-auto" />
-              <h2 className="text-2xl font-bold text-white">Registration Successful!</h2>
-              <p className="text-green-200">
-                {confirmationMessage ||
-                  "Your account has been created successfully. Please check your email for a confirmation link."}
-              </p>
-              <Button onClick={() => router.push("/login")} className="bg-green-600 hover:bg-green-700">
-                Continue to Login
-              </Button>
+      <Card className="w-full">
+        <CardContent className="pt-6">
+          <div className="text-center space-y-4">
+            <div className="flex justify-center">
+              <div className="bg-green-100 dark:bg-green-900 p-3 rounded-full">
+                <CheckCircle className="h-12 w-12 text-green-600" />
+              </div>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+            <h2 className="text-2xl font-bold text-green-600">Registration Successful!</h2>
+            <p className="text-gray-600 dark:text-gray-300">
+              Your account has been created successfully. Please check your email for verification instructions.
+            </p>
+            <Button onClick={() => router.push("/login")} className="bg-green-600 hover:bg-green-700">
+              Continue to Login
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     )
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 p-4 relative overflow-hidden">
-      {/* Web3 Background Illustration */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-20 left-20 w-32 h-32 border border-blue-400 rounded-full animate-pulse"></div>
-        <div className="absolute top-40 right-32 w-24 h-24 border border-blue-300 rounded-lg rotate-45 animate-bounce"></div>
-        <div className="absolute bottom-32 left-40 w-20 h-20 bg-blue-400 rounded-full opacity-20 animate-ping"></div>
-        <div className="absolute bottom-20 right-20 w-28 h-28 border-2 border-blue-500 rounded-full animate-spin"></div>
-        {/* Blockchain network lines */}
-        <svg className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse">
-              <path d="M 50 0 L 0 0 0 50" fill="none" stroke="rgba(59, 130, 246, 0.1)" strokeWidth="1" />
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#grid)" />
-        </svg>
-      </div>
-
-      <div className="w-full max-w-md relative z-10">
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-block">
-            <div className="flex items-center justify-center gap-2">
-              <Image
-                src="/images/wolv-invest-logo.png"
-                alt="WOLV-INVEST"
-                width={50}
-                height={50}
-                className="h-12 w-auto"
+    <Card className="w-full">
+      <CardHeader className="space-y-2">
+        <CardTitle className="text-2xl font-bold text-center">Create Account</CardTitle>
+        <CardDescription className="text-center">
+          Join thousands of investors and start earning today
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          
+          <div className="space-y-2">
+            <Label htmlFor="name">Full Name</Label>
+            <Input
+              id="name"
+              type="text"
+              placeholder="Enter your full name"
+              value={formData.name}
+              onChange={(e) => handleInputChange("name", e.target.value)}
+              disabled={isLoading}
+              required
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="email">Email Address</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="Enter your email"
+              value={formData.email}
+              onChange={(e) => handleInputChange("email", e.target.value)}
+              disabled={isLoading}
+              required
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="password">Password</Label>
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="Create a password (min. 6 characters)"
+                value={formData.password}
+                onChange={(e) => handleInputChange("password", e.target.value)}
+                disabled={isLoading}
+                required
               />
-              <div className="flex flex-col">
-                <span className="text-2xl font-bold text-white">WOLV-INVEST</span>
-                <span className="text-sm text-blue-200">Invest Smarter</span>
-              </div>
-            </div>
-          </Link>
-          <p className="text-blue-200 mt-4">Create your investment account</p>
-        </div>
-
-        <Card className="border-blue-700 bg-blue-800/50 backdrop-blur-lg shadow-2xl">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl text-center text-white">Create Account</CardTitle>
-            <CardDescription className="text-center text-blue-200">
-              Join thousands of smart investors on WOLV-INVEST
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name" className="text-white">
-                  Full Name
-                </Label>
-                <Input
-                  id="name"
-                  name="name"
-                  type="text"
-                  placeholder="Enter your full name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  className="bg-blue-700/50 border-blue-600 text-white placeholder:text-blue-300 focus:border-blue-400"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-white">
-                  Email Address
-                </Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="Enter your email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  className="bg-blue-700/50 border-blue-600 text-white placeholder:text-blue-300 focus:border-blue-400"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-white">
-                  Password
-                </Label>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  placeholder="Create a strong password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  className="bg-blue-700/50 border-blue-600 text-white placeholder:text-blue-300 focus:border-blue-400"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword" className="text-white">
-                  Confirm Password
-                </Label>
-                <Input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type="password"
-                  placeholder="Confirm your password"
-                  value={formData.confirmPassword}
-                  onChange={handleInputChange}
-                  className="bg-blue-700/50 border-blue-600 text-white placeholder:text-blue-300 focus:border-blue-400"
-                  required
-                />
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="terms"
-                    checked={formData.agreeToTerms}
-                    onCheckedChange={(checked) =>
-                      setFormData((prev) => ({ ...prev, agreeToTerms: checked as boolean }))
-                    }
-                  />
-                  <label htmlFor="terms" className="text-sm text-blue-200">
-                    I agree to the{" "}
-                    <Link href="/terms" className="text-blue-400 hover:text-blue-300">
-                      Terms and Conditions
-                    </Link>{" "}
-                    and{" "}
-                    <Link href="/privacy" className="text-blue-400 hover:text-blue-300">
-                      Privacy Policy
-                    </Link>
-                  </label>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="risk"
-                    checked={formData.agreeToRisk}
-                    onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, agreeToRisk: checked as boolean }))}
-                  />
-                  <label htmlFor="risk" className="text-sm text-blue-200">
-                    I acknowledge the{" "}
-                    <Link href="/risk-disclosure" className="text-blue-400 hover:text-blue-300">
-                      Risk Disclosure
-                    </Link>{" "}
-                    and understand investment risks
-                  </label>
-                </div>
-              </div>
-
-              {error && (
-                <Alert className="border-red-500 bg-red-500/10">
-                  <AlertDescription className="text-red-400">{error}</AlertDescription>
-                </Alert>
-              )}
-
-              <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white" disabled={isLoading}>
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating Account...
-                  </>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                onClick={() => setShowPassword(!showPassword)}
+                disabled={isLoading}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4" />
                 ) : (
-                  <>
-                    <UserPlus className="mr-2 h-4 w-4" />
-                    Create Account
-                  </>
+                  <Eye className="h-4 w-4" />
                 )}
               </Button>
-            </form>
-
-            <div className="mt-6 text-center">
-              <p className="text-sm text-blue-200">
-                Already have an account?{" "}
-                <Link href="/login" className="text-blue-400 hover:text-blue-300 font-medium">
-                  Sign in
-                </Link>
-              </p>
             </div>
-
-            <div className="mt-4 text-center">
-              <Link href="/" className="text-sm text-blue-200 hover:text-blue-300">
-                ← Back to Home
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="confirmPassword">Confirm Password</Label>
+            <div className="relative">
+              <Input
+                id="confirmPassword"
+                type={showConfirmPassword ? "text" : "password"}
+                placeholder="Confirm your password"
+                value={formData.confirmPassword}
+                onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
+                disabled={isLoading}
+                required
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                disabled={isLoading}
+              >
+                {showConfirmPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="terms"
+              checked={formData.agreeToTerms}
+              onCheckedChange={(checked) => handleInputChange("agreeToTerms", checked as boolean)}
+              disabled={isLoading}
+            />
+            <Label htmlFor="terms" className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              I agree to the{" "}
+              <Link href="/terms" className="text-blue-600 hover:text-blue-700 underline">
+                Terms of Service
+              </Link>{" "}
+              and{" "}
+              <Link href="/privacy" className="text-blue-600 hover:text-blue-700 underline">
+                Privacy Policy
               </Link>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+            </Label>
+          </div>
+          
+          <Button 
+            type="submit" 
+            className="w-full bg-blue-600 hover:bg-blue-700" 
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Creating Account...
+              </>
+            ) : (
+              "Create Account"
+            )}
+          </Button>
+        </form>
+        
+        <div className="mt-6 text-center">
+          <p className="text-sm text-gray-600 dark:text-gray-300">
+            Already have an account?{" "}
+            <Link href="/login" className="text-blue-600 hover:text-blue-700 font-medium">
+              Sign in
+            </Link>
+          </p>
+        </div>
+      </CardContent>
+    </Card>
   )
 }
